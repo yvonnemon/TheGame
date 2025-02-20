@@ -1,27 +1,59 @@
 package org.example.model;
 
+import org.example.view.View;
+
+import javax.swing.*;
+
 public class Ball implements Runnable {
     private int x;
     private int y;
     private int speed;
     private int color;
     private int diameter;
+    private int deltaX = 3;
+    private int deltaY = 3;
+    private boolean running = true;
+    private View view;
 
-    public Ball(int x, int y, int speed, int color, int diameter) {
+
+    public Ball(int x, int y, int speed, int color, int diameter, View view) {
         this.x = x;
         this.y = y;
         this.speed = speed;
         this.color = color;
         this.diameter = diameter;
+        this.view = view;
     }
 
     private void move(){
-
+        x += deltaX;
+        y += deltaY;
+        checkCollision();
+        SwingUtilities.invokeLater(view::repaint);
     }
 
     @Override
     public void run() {
-        move();
+        while (running) {
+            move();
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private void checkCollision() {
+        if (x <= 0 || x + diameter >= view.getWidth()) {
+            deltaX = -deltaX;
+            System.out.println("Ball hit the horizontal border at (" + x + ", " + y + ")");
+        }
+        if (y <= 0 || y + diameter >= view.getHeight()) {
+            deltaY = -deltaY;
+            System.out.println("Ball hit the vertical border at (" + x + ", " + y + ")");
+        }
     }
 
     public int getX() {
