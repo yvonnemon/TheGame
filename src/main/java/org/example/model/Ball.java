@@ -1,5 +1,6 @@
 package org.example.model;
 
+import org.example.controller.SocketManager;
 import org.example.view.View;
 
 import javax.swing.*;
@@ -14,15 +15,16 @@ public class Ball implements Runnable {
     private int deltaY = 3;
     private boolean running = true;
     private View view;
+    private SocketManager socketManager;
 
-
-    public Ball(int x, int y, int speed, int color, int diameter, View view) {
+    public Ball(int x, int y, int speed, int color, int diameter, View view, SocketManager socketManager) {
         this.x = x;
         this.y = y;
         this.speed = speed;
         this.color = color;
         this.diameter = diameter;
         this.view = view;
+        this.socketManager = socketManager;
     }
 
     private void move(){
@@ -47,7 +49,8 @@ public class Ball implements Runnable {
 
     private void checkCollision() {
         if (x <= 0 || x + diameter >= view.getWidth()) {
-            deltaX = -deltaX;
+            socketManager.sendBallData(x, y, speed, diameter);
+            running = false; // Stop ball on this instance
             System.out.println("Ball hit the horizontal border at (" + x + ", " + y + ")");
         }
         if (y <= 0 || y + diameter >= view.getHeight()) {
@@ -94,5 +97,13 @@ public class Ball implements Runnable {
 
     public void setDiameter(int diameter) {
         this.diameter = diameter;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
     }
 }
