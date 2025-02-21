@@ -16,8 +16,12 @@ public class Ball implements Runnable {
     private boolean running = true;
     private View view;
     private SocketManager socketManager;
+    private boolean isPrimaryInstance;
+    private long lastTransferTime = 0;
+    private static final int TRANSFER_COOLDOWN = 1000;
+    private static final int BORDER_OFFSET = 5;
 
-    public Ball(int x, int y, int speed, int color, int diameter, View view, SocketManager socketManager) {
+    public Ball(int x, int y, int speed, int color, int diameter, View view, SocketManager socketManager, boolean isPrimaryInstance) {
         this.x = x;
         this.y = y;
         this.speed = speed;
@@ -25,6 +29,7 @@ public class Ball implements Runnable {
         this.diameter = diameter;
         this.view = view;
         this.socketManager = socketManager;
+        this.isPrimaryInstance = isPrimaryInstance;
     }
 
     private void move(){
@@ -48,16 +53,48 @@ public class Ball implements Runnable {
     }
 
     private void checkCollision() {
-        if (x <= 0 || x + diameter >= view.getWidth()) {
-            socketManager.sendBallData(x, y, speed, diameter);
-            running = false; // Stop ball on this instance
-            System.out.println("Ball hit the horizontal border at (" + x + ", " + y + ")");
+        long currentTime = System.currentTimeMillis();
+
+        if (isPrimaryInstance) {
+            if (x + diameter >= view.getWidth()) { // Transfer to screen2
+                if (currentTime - lastTransferTime > TRANSFER_COOLDOWN) {
+                    lastTransferTime = currentTime;
+                    int newX = BORDER_OFFSET;
+                    socketManager.sendBallData(newX, y, speed, diameter, deltaX);
+
+                    running = false; // Stop the ball's movement
+                    socketManager.notifyBallTransfer(this); // Tell GameController to remove it
+                    System.out.println("Ball sent to screen2 and removed from screen1.");
+                }
+            } else if (x <= 0) { // Bounce on left wall of screen1
+                deltaX = -deltaX;
+                System.out.println("Ball hit the left wall of screen1 and bounced.");
+            }
+        } else {
+            if (x + diameter >= view.getWidth()) { // Bounce on right wall of screen2
+                deltaX = -deltaX;
+                System.out.println("Ball hit the right wall of screen2 and bounced.");
+            } else if (x <= 0) { // Transfer back to screen1
+                if (currentTime - lastTransferTime > TRANSFER_COOLDOWN) {
+                    lastTransferTime = currentTime;
+                    int newX = view.getWidth() - BORDER_OFFSET - diameter;
+                    socketManager.sendBallData(newX, y, speed, diameter, deltaX);
+
+                    running = false; // Stop the ball's movement
+                    socketManager.notifyBallTransfer(this); // Tell GameController to remove it
+                    System.out.println("Ball sent back to screen1 and removed from screen2.");
+                }
+            }
         }
+
+
         if (y <= 0 || y + diameter >= view.getHeight()) {
             deltaY = -deltaY;
-            System.out.println("Ball hit the vertical border at (" + x + ", " + y + ")");
         }
     }
+
+
+
 
     public int getX() {
         return x;
@@ -105,5 +142,9 @@ public class Ball implements Runnable {
 
     public void setRunning(boolean running) {
         this.running = running;
+    }
+
+    public void setDeltaX(int deltaX) {
+        this.deltaX = deltaX;
     }
 }

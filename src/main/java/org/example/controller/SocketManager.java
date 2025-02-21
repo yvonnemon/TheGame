@@ -1,5 +1,7 @@
 package org.example.controller;
 
+import org.example.model.Ball;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -36,9 +38,10 @@ public class SocketManager {
                         int y = Integer.parseInt(parts[1]);
                         int speed = Integer.parseInt(parts[2]);
                         int diameter = Integer.parseInt(parts[3]);
+                        int deltaX = Integer.parseInt(parts[4]);
 
                         System.out.println("Received ball transfer: " + data);
-                        gameController.receiveBall(x, y, speed, diameter);
+                        gameController.receiveBall(x, y, speed, diameter, deltaX);
                     }
                 }
             } catch (IOException e) {
@@ -47,13 +50,20 @@ public class SocketManager {
         }).start();
     }
 
-    public void sendBallData(int x, int y, int speed, int diameter) {
+
+
+    public void sendBallData(int x, int y, int speed, int diameter, int deltaX) {
         try (Socket socket = new Socket(otherHost, otherPort);
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
-            out.println(x + "," + y + "," + speed + "," + diameter);
-            System.out.println("Sent ball to other instance: " + x + ", " + y);
+            out.println(x + "," + y + "," + speed + "," + diameter + "," + deltaX);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+
+    public void notifyBallTransfer(Ball ball) {
+        gameController.removeBall(ball);
+    }
+
 }
