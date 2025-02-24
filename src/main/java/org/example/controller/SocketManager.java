@@ -39,9 +39,10 @@ public class SocketManager {
                         int speed = Integer.parseInt(parts[2]);
                         int diameter = Integer.parseInt(parts[3]);
                         int deltaX = Integer.parseInt(parts[4]);
+                        int deltaY = (parts.length > 5) ? Integer.parseInt(parts[5]) : 3;
 
                         System.out.println("Received ball transfer: " + data);
-                        gameController.receiveBall(x, y, speed, diameter, deltaX);
+                        gameController.receiveBall(x, y, speed, diameter, deltaX, deltaY);
                     }
                 }
             } catch (IOException e) {
@@ -52,13 +53,24 @@ public class SocketManager {
 
 
 
-    public void sendBallData(int x, int y, int speed, int diameter, int deltaX) {
-        try (Socket socket = new Socket(otherHost, otherPort);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
-            out.println(x + "," + y + "," + speed + "," + diameter + "," + deltaX);
-        } catch (IOException e) {
-            e.printStackTrace();
+    public void sendBallData(int x, int y, int speed, int diameter, int deltaX, int deltaY) {
+        int maxRetries = 5;
+        int retryDelay = 500; // 500ms delay between retries
+
+        for (int i = 0; i < maxRetries; i++) {
+            try (Socket socket = new Socket(otherHost, otherPort);
+                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
+                out.println(x + "," + y + "," + speed + "," + diameter + "," + deltaX + "," + deltaY);
+                System.out.println("Sent ball to other instance after " + (i + 1) + " attempt(s).");
+                return; // Success, exit loop
+            } catch (IOException e) {
+                System.err.println("Connection attempt " + (i + 1) + " failed. Retrying...");
+                try {
+                    Thread.sleep(retryDelay);
+                } catch (InterruptedException ignored) {}
+            }
         }
+        System.err.println("Failed to send ball after multiple attempts.");
     }
 
 

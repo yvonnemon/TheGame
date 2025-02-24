@@ -60,7 +60,7 @@ public class Ball implements Runnable {
                 if (currentTime - lastTransferTime > TRANSFER_COOLDOWN) {
                     lastTransferTime = currentTime;
                     int newX = BORDER_OFFSET;
-                    socketManager.sendBallData(newX, y, speed, diameter, deltaX);
+                    socketManager.sendBallData(newX, y, speed, diameter, deltaX, deltaY);
 
                     running = false; // Stop the ball's movement
                     socketManager.notifyBallTransfer(this); // Tell GameController to remove it
@@ -78,7 +78,7 @@ public class Ball implements Runnable {
                 if (currentTime - lastTransferTime > TRANSFER_COOLDOWN) {
                     lastTransferTime = currentTime;
                     int newX = view.getWidth() - BORDER_OFFSET - diameter;
-                    socketManager.sendBallData(newX, y, speed, diameter, deltaX);
+                    socketManager.sendBallData(newX, y, speed, diameter, deltaX, deltaY);
 
                     running = false; // Stop the ball's movement
                     socketManager.notifyBallTransfer(this); // Tell GameController to remove it
@@ -146,5 +146,13 @@ public class Ball implements Runnable {
 
     public void setDeltaX(int deltaX) {
         this.deltaX = deltaX;
+    }
+
+    public int getDeltaY() {
+        return deltaY;
+    }
+
+    public void setDeltaY(int deltaY) {
+        this.deltaY = deltaY;
     }
 }

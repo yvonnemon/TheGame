@@ -35,8 +35,9 @@ public class GameController {
             frame.setVisible(true);
 
             if (isPrimaryInstance) {
-                startBall(100, 100, 15, 30, 5); // Only start the ball in primary instance
-                startBall(45, 123, 30, 30, -15); // Only start the ball in primary instance
+                startBall(100, 100, 15, 30, 5, 5); // Only start the ball in primary instance
+                startBall(45, 153, 20, 30, 15, 3); // Only start the ball in primary instance
+                startBall(45, 100, 30, 30, -15, 3); // Only start the ball in primary instance
             }
 
             /*Thread ballThread = new Thread(ball);
@@ -44,9 +45,10 @@ public class GameController {
         });
     }
 
-    public void startBall(int x, int y, int speed, int diameter, int deltaX) {
+    public void startBall(int x, int y, int speed, int diameter, int deltaX, int deltaY) {
         Ball ball = new Ball(x, y, speed, 20, diameter, canvas, socketManager, isPrimaryInstance);
         ball.setDeltaX(deltaX);
+        ball.setDeltaY(deltaY);
         balls.add(ball); // Store multiple balls
         // Update the View with all balls
         new Thread(ball).start();
@@ -76,10 +78,10 @@ public class GameController {
 //        }
     }
 
-    public void receiveBall(int x, int y, int speed, int diameter, int deltaX) {
+    public void receiveBall(int x, int y, int speed, int diameter, int deltaX, int deltaY) {
         SwingUtilities.invokeLater(() -> {
             System.out.println("Received ball at (" + x + ", " + y + ") moving " + (deltaX > 0 ? "right" : "left"));
-            startBall(x, y, speed, diameter, deltaX); // Pass direction
+            startBall(x, y, speed, diameter, deltaX, deltaY); // Pass direction
         });
     }
 
